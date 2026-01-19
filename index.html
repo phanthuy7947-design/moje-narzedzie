@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mój Lokalny Arkusz Danych</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f7f6; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; }
+        #pasteArea { width: 100%; height: 100px; border: 2px dashed #3498db; border-radius: 5px; display: flex; align-items: center; justify-content: center; color: #3498db; cursor: pointer; margin-bottom: 20px; transition: 0.3s; }
+        #pasteArea:hover { background: #ebf5fb; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #2ecc71; color: white; position: sticky; top: 0; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+        .controls { margin-bottom: 10px; }
+        button { padding: 8px 15px; cursor: pointer; background: #e74c3c; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #c0392b; }
+        #status { color: #7f8c8d; font-size: 0.9em; margin-left: 10px; }
+        [contenteditable] { outline: none; background: #fffde7; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Wklej dane z Excela</h2>
+    <div class="controls">
+        <button onclick="clearTable()">Wyczyść wszystko</button>
+        <span id="status">Oczekiwanie na dane...</span>
+    </div>
+    
+    <div id="pasteArea">Kliknij tutaj i wciśnij Ctrl + V, aby wkleić dane z Excela</div>
+
+    <div style="overflow-x: auto;">
+        <table id="dataTable">
+            <thead>
+                <tr id="headerRow"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const pasteArea = document.getElementById('pasteArea');
+    const tableBody = document.getElementById('tableBody');
+    const headerRow = document.getElementById('headerRow');
+    const status = document.getElementById('status');
+
+    // Obsługa wklejania
+    document.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const clipboardData = e.clipboardData || window.clipboardData;
+        const pastedData = clipboardData.getData('Text');
+        
+        if (pastedData) {
+            processData(pastedData);
+        }
+    });
+
+    function processData(data) {
+        const rows = data.trim().split(/\r\n|\n/);
+        tableBody.innerHTML = '';
+        headerRow.innerHTML = '';
+
+        rows.forEach((row, index) => {
+            const columns = row.split('\t'); // Excel oddziela kolumny tabulatorami
+            const tr = document.createElement('tr');
+
+            columns.forEach(colText => {
+                if (index === 0) {
+                    // Tworzenie nagłówka z pierwszego wiersza
+                    const th = document.createElement('th');
+                    th.innerText = colText;
+                    headerRow.appendChild(th);
+                } else {
+                    // Tworzenie komórek danych
+                    const td = document.createElement('td');
+                    td.innerText = colText;
+                    td.contentEditable = true; // Pozwala edytować dane po wklejeniu
+                    tr.appendChild(td);
+                }
+            });
+
+            if (index > 0) tableBody.appendChild(tr);
+        });
+
+        status.innerText = `Załadowano wierszy: ${rows.length}`;
+    }
+
+    function clearTable() {
+        if(confirm("Czy na pewno wyczyścić wszystkie dane?")) {
+            tableBody.innerHTML = '';
+            headerRow.innerHTML = '';
+            status.innerText = "Wyczyszczono.";
+        }
+    }
+</script>
+
+</body>
+</html>
